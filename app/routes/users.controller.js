@@ -7,6 +7,7 @@ const Role = require('../_helpers/role');
 // routes
 router.post('/authenticate', authenticate);     // public route
 router.post('/register', register);             // public route
+router.delete('/remove/:id', authorize(Role.Admin), deleteUser);
 router.get('/', authorize(Role.Admin), getAll); // admin only
 router.get('/:id', authorize(), getById);       // all authenticated users
 module.exports = router;
@@ -34,6 +35,13 @@ function register(req, res, next) {
          })
     )
     .catch(err => next(err));
+}
+
+function deleteUser(req, res, next) {
+    userService
+        .removeUser(req.params.id)
+        .then(deletedUser => res.status(200).json(deletedUser))
+        .catch(err => next(err));
 }
 
 function getAll(req, res, next) {

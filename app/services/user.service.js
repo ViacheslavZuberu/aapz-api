@@ -9,7 +9,8 @@ module.exports = {
     authenticate,
     getAll,
     getById,
-    register
+    register,
+    removeUser
 };
 
 async function authenticate({ username, password }) {
@@ -82,6 +83,20 @@ async function register({
         .catch(err => console.log(err));
 
     return true;
+}
+
+async function removeUser(userId) {
+    let deletedUser = await User.findByIdAndDelete(userId);
+    let result = { 
+        message: "There's no user with such ID!"
+    };
+
+    if (deletedUser) {
+        const {__v, password, ...safeUser} = deletedUser;
+        result = safeUser;
+    }
+
+    return result;
 }
 
 async function getAll() {
