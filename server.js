@@ -17,6 +17,7 @@ app.use(cors());
 // Api routes
 app.use('/users', require('./app/routes/users.controller'));
 app.use('/events', require('./app/routes/events.controller'));
+app.use("/stats", require('./app/routes/stats.controller'));
 
 // Global error handler
 app.use(errorHandler);

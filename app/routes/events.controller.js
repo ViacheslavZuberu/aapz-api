@@ -5,10 +5,10 @@ const authorize = require('../_helpers/authorize')
 const Role = require('../_helpers/role');
 
 // routes
-router.post('/create', authorize(Role), create);
+router.post('/create', authorize(Role.MeetupManager), create);
 router.post('/subscribe/:id', authorize(), subscribe);
 router.post('/unsubscribe/:id', authorize(), unsubscribe);
-router.get('/', authorize(Role.Admin), getAll);
+router.get('/', authorize(), getAll);
 router.get('/subscribed', authorize(), getSubscribedEvents);
 module.exports = router;
 
