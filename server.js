@@ -24,6 +24,6 @@ app.use(errorHandler);
 
 // Start server
 const port = process.env.PORT || 4000;
-const server = app.listen(port, function () {
+app.listen(port, function () {
     console.log('Server started on port ' + port);
 });
