@@ -8,9 +8,22 @@ const Role = require("../_helpers/role");
 router.post("/create", authorize([Role.MeetupManager, Role.Admin]), create);
 router.post("/subscribe/:id", authorize(), subscribe);
 router.post("/unsubscribe/:id", authorize(), unsubscribe);
+router.get(
+  "/manager",
+  authorize([Role.MeetupManager, Role.Admin]),
+  getManagerEvents
+);
+router.get(
+  "/manager/:id",
+  authorize([Role.MeetupManager, Role.Admin]),
+  getManagerEvent
+);
 router.get("/", authorize(), getAll);
 router.get("/subscribed", authorize(), getSubscribedEvents);
 router.get("/:id", authorize(), getEventById);
+router.delete("/:id", authorize([Role.MeetupManager, Role.Admin]), deleteEvent);
+router.patch("/:id", authorize([Role.MeetupManager, Role.Admin]), updateEvent);
+
 module.exports = router;
 
 function create(req, res, next) {
@@ -28,6 +41,27 @@ function create(req, res, next) {
 function getAll(req, res, next) {
   eventService
     .getAll()
+    .then(events => res.json(events))
+    .catch(err => next(err));
+}
+
+function deleteEvent(req, res, next) {
+  let userId = req.user.sub;
+  let eventId = req.params.id;
+
+  eventService
+    .deleteEvent({ eventId, userId })
+    .then(events => res.json(events))
+    .catch(err => next(err));
+}
+
+function updateEvent(req, res, next) {
+  let userId = req.user.sub;
+  let eventId = req.params.id;
+  let content = req.body;
+
+  eventService
+    .updateEvent({ eventId, userId, content })
     .then(events => res.json(events))
     .catch(err => next(err));
 }
@@ -68,5 +102,23 @@ function getEventById(req, res, next) {
   eventService
     .getEventById(eventId, userId)
     .then(event => res.json(event))
+    .catch(err => next(err));
+}
+
+function getManagerEvents(req, res, next) {
+  let userId = req.user.sub;
+
+  eventService
+    .getManagerEvents(userId)
+    .then(events => res.json(events))
+    .catch(err => next(err));
+}
+
+function getManagerEvent(req, res, next) {
+  let eventId = req.params.id;
+
+  eventService
+    .getManagerEvent(eventId)
+    .then(events => res.json(events))
     .catch(err => next(err));
 }

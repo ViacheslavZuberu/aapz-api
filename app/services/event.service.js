@@ -7,7 +7,11 @@ module.exports = {
   register,
   unregister,
   getSubscribedEvents,
-  getEventById
+  getEventById,
+  deleteEvent,
+  updateEvent,
+  getManagerEvents,
+  getManagerEvent
 };
 
 async function createEvent({ title, type, place, datetime, user }) {
@@ -21,6 +25,50 @@ async function createEvent({ title, type, place, datetime, user }) {
   });
 
   event.save();
+
+  return event;
+}
+
+async function deleteEvent({ eventId, userId }) {
+  let event = await Event.findById(eventId)
+    .select("title place datetime hostUser")
+    .lean();
+
+  if (!event) {
+    throw "There's no event with such ID";
+  }
+
+  if (event.hostUser.equals(userId)) {
+    await Event.findByIdAndDelete(eventId);
+    return event;
+  }
+
+  throw {
+    name: "PermissionError",
+    text: "User is not an owner of this event!"
+  };
+}
+
+async function updateEvent({ eventId, userId, content }) {
+  let event = await Event.findById(eventId).exec();
+
+  if (!event) {
+    throw "Wrong event ID!";
+  }
+
+  if (!event.hostUser.equals(userId)) {
+    throw {
+      name: "PermissionError",
+      text: "You are not an owner of the event!"
+    };
+  }
+
+  event.title = content.title || event.title;
+  event.type = content.type || event.type;
+  event.place = content.place || event.place;
+  event.datetime = content.datetime || event.datetime;
+
+  await event.save();
 
   return event;
 }
@@ -72,7 +120,9 @@ async function getSubscribedEvents(userId) {
 }
 
 async function getEventById(eventId, userId) {
-  let event = await Event.findById(eventId).lean();
+  let event = await Event.findById(eventId)
+    .select("title type place datetime subscribedUsers")
+    .lean();
   let isSubscribed = await Event.findById(eventId)
     .find({
       subscribedUsers: userId
@@ -80,8 +130,29 @@ async function getEventById(eventId, userId) {
     .countDocuments();
 
   isSubscribed = Boolean(isSubscribed);
-  const { __v, subscribedUsers, ...pureEvent } = event;
-  pureEvent.isSubscribed = isSubscribed;
+  event.isSubscribed = isSubscribed;
+  event.subscribers = event.subscribedUsers.length;
 
-  return pureEvent;
+  const { subscribedUsers, ...resultEvent } = event;
+
+  return resultEvent;
+}
+
+async function getManagerEvents(userId) {
+  let events = await Event.find({ hostUser: userId })
+    .select("-hostUser -__v")
+    .lean();
+
+  return events.map(event => {
+    event.subscribers = event.subscribedUsers.length;
+    delete event.subscribedUsers;
+    return event;
+  });
+}
+
+async function getManagerEvent(eventId) {
+  return await Event.findById(eventId)
+    .select("-__v -hostUser")
+    .populate("subscribedUsers")
+    .lean();
 }
