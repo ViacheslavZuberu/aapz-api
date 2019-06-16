@@ -67,6 +67,7 @@ async function updateEvent({ eventId, userId, content }) {
   event.type = content.type || event.type;
   event.place = content.place || event.place;
   event.datetime = content.datetime || event.datetime;
+  event.status = content.datetime || event.status;
 
   await event.save();
 
@@ -74,12 +75,11 @@ async function updateEvent({ eventId, userId, content }) {
 }
 
 async function getAll() {
-  let events = await Event.find().lean();
+  let events = await Event.find()
+    .select("-__v -subscribedUsers")
+    .lean();
 
-  return events.map(e => {
-    const { __v, ...clearEvent } = e;
-    return clearEvent;
-  });
+  return events;
 }
 
 async function register({ userId, eventId }) {
@@ -93,7 +93,7 @@ async function register({ userId, eventId }) {
 
   let event = await Event.findById(eventId);
 
-  event.subscribedUsers.push(userId);
+  event.subscribedUsers.push({ user: userId });
 
   event.save();
 
@@ -101,17 +101,19 @@ async function register({ userId, eventId }) {
 }
 
 async function unregister({ userId, eventId }) {
-  let event = await Event.findById(eventId);
-
-  event.subscribedUsers.pull(userId);
-
-  event.save();
+  let event = await Event.findByIdAndUpdate(eventId, {
+    $pull: {
+      subscribedUsers: {
+        user: userId
+      }
+    }
+  });
 
   return event;
 }
 
 async function getSubscribedEvents(userId) {
-  let events = await Event.find({ subscribedUsers: userId }).lean();
+  let events = await Event.find({ "subscribedUsers.user": userId }).lean();
 
   return events.map(event => {
     const { __v, subscribedUsers, ...safeEvent } = event;
@@ -153,6 +155,6 @@ async function getManagerEvents(userId) {
 async function getManagerEvent(eventId) {
   return await Event.findById(eventId)
     .select("-__v -hostUser")
-    .populate("subscribedUsers")
+    .populate({ path: "subscribedUsers.user", select: "-__v -password" })
     .lean();
 }
