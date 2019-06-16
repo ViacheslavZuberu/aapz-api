@@ -8,6 +8,11 @@ const Role = require("../_helpers/role");
 router.post("/create", authorize([Role.MeetupManager, Role.Admin]), create);
 router.post("/subscribe/:id", authorize(), subscribe);
 router.post("/unsubscribe/:id", authorize(), unsubscribe);
+router.post(
+  "/change_att/:att_id/:status",
+  authorize([Role.MeetupManager, Role.Admin]),
+  changeAttendance
+);
 router.get(
   "/manager",
   authorize([Role.MeetupManager, Role.Admin]),
@@ -119,6 +124,16 @@ function getManagerEvent(req, res, next) {
 
   eventService
     .getManagerEvent(eventId)
+    .then(events => res.json(events))
+    .catch(err => next(err));
+}
+
+function changeAttendance(req, res, next) {
+  let attId = req.params.att_id;
+  let newStatus = req.params.status === "true" ? true : false;
+
+  eventService
+    .changeAttendance(attId, newStatus)
     .then(events => res.json(events))
     .catch(err => next(err));
 }

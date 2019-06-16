@@ -11,7 +11,8 @@ module.exports = {
   deleteEvent,
   updateEvent,
   getManagerEvents,
-  getManagerEvent
+  getManagerEvent,
+  changeAttendance
 };
 
 async function createEvent({ title, type, place, datetime, user }) {
@@ -175,4 +176,13 @@ async function getManagerEvent(eventId) {
     .select("-__v -hostUser")
     .populate({ path: "subscribedUsers.user", select: "-__v -password" })
     .lean();
+}
+
+async function changeAttendance(attandanceId, newStatus) {
+  return await Event.updateOne(
+    {
+      "subscribedUsers._id": attandanceId
+    },
+    { $set: { "subscribedUsers.$.attended": newStatus } }
+  );
 }
