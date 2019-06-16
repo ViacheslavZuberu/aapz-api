@@ -8,6 +8,7 @@ const Role = require("../_helpers/role");
 router.post("/authenticate", authenticate); // public route
 router.post("/register", register); // public route
 router.post("/upgrade/:id", authorize(Role.Admin), upgradeUser);
+router.post("/downgrade/:id", authorize(Role.Admin), downgradeUser);
 router.delete("/remove/:id", authorize(Role.Admin), deleteUser);
 router.get("/", authorize(Role.Admin), getAll); // admin only
 router.get("/:id", authorize(), getById); // all authenticated users
@@ -73,6 +74,15 @@ function upgradeUser(req, res, next) {
 
   userService
     .upgradeUser(id)
+    .then(user => (user ? res.json(user) : res.sendStatus(404)))
+    .catch(err => next(err));
+}
+
+function downgradeUser(req, res, next) {
+  const id = req.params.id;
+
+  userService
+    .downgradeUser(id)
     .then(user => (user ? res.json(user) : res.sendStatus(404)))
     .catch(err => next(err));
 }

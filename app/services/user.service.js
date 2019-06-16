@@ -11,7 +11,8 @@ module.exports = {
   getById,
   register,
   removeUser,
-  upgradeUser
+  upgradeUser,
+  downgradeUser
 };
 
 async function authenticate({ username, password }) {
@@ -122,6 +123,16 @@ async function upgradeUser(id) {
   const user = await User.findByIdAndUpdate(id, {
     $set: {
       role: Role.MeetupManager
+    }
+  }).select("-__v -password");
+
+  return user;
+}
+
+async function downgradeUser(id) {
+  const user = await User.findByIdAndUpdate(id, {
+    $set: {
+      role: Role.User
     }
   }).select("-__v -password");
 
