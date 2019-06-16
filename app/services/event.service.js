@@ -141,7 +141,7 @@ async function getSubscribedEvents(userId) {
 
 async function getEventById(eventId, userId) {
   let event = await Event.findById(eventId)
-    .select("title type place datetime subscribedUsers")
+    .select("-__v")
     .lean();
   let isSubscribed = await Event.findById(eventId)
     .find({
