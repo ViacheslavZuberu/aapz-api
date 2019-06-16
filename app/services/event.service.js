@@ -127,7 +127,7 @@ async function getEventById(eventId, userId) {
     .lean();
   let isSubscribed = await Event.findById(eventId)
     .find({
-      subscribedUsers: userId
+      "subscribedUsers.user": userId
     })
     .countDocuments();
 
