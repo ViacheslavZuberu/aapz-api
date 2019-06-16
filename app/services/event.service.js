@@ -113,12 +113,30 @@ async function unregister({ userId, eventId }) {
 }
 
 async function getSubscribedEvents(userId) {
-  let events = await Event.find({ "subscribedUsers.user": userId }).lean();
+  let options = [
+    {
+      $unwind: "$subscribedUsers"
+    },
+    {
+      $match: {
+        "subscribedUsers.user": mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $addFields: {
+        attended: "$subscribedUsers.attended"
+      }
+    },
+    {
+      $project: {
+        __v: 0,
+        subscribedUsers: 0
+      }
+    }
+  ];
+  let events = await Event.aggregate(options);
 
-  return events.map(event => {
-    const { __v, subscribedUsers, ...safeEvent } = event;
-    return safeEvent;
-  });
+  return events;
 }
 
 async function getEventById(eventId, userId) {
