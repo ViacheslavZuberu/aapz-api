@@ -104,7 +104,7 @@ async function getAll({ perPage, page }) {
   page = parseInt(page) || 0;
 
   let lastPage = Math.ceil(await User.find().countDocuments() / perPage); 
-  let usersQuery = User.find().select("-_id -password -__v");
+  let usersQuery = User.find().select("-password -__v");
 
   if (perPage > 0) {
     usersQuery.limit(perPage)
