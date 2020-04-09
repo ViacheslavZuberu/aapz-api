@@ -98,13 +98,33 @@ async function removeUser(userId) {
   return result;
 }
 
-async function getAll() {
-  let users = await User.find().lean();
+async function getAll({ perPage, page }) {
 
-  return users.map(u => {
-    const { password, __v, ...userWithoutPassword } = u;
-    return userWithoutPassword;
-  });
+  perPage = parseInt(perPage) || 10;
+  page = parseInt(page) || 0;
+
+  let lastPage = Math.ceil(await User.find().countDocuments() / perPage); 
+  let usersQuery = User.find().select("-_id -password -__v");
+
+  if (perPage > 0) {
+    usersQuery.limit(perPage)
+  }
+
+  page = page > lastPage ? lastPage : page;
+  page = page < 1 ? 1 : page;
+
+  if (page > 0) {
+    usersQuery.skip(perPage * (page - 1));
+  }
+
+  let users = await usersQuery.lean();
+
+  return { 
+    users,
+    page,
+    perPage,
+    lastPage
+  };
 }
 
 async function getById(id) {

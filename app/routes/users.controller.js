@@ -12,19 +12,29 @@ router.post("/downgrade/:id", authorize(Role.Admin), downgradeUser);
 router.delete("/remove/:id", authorize(Role.Admin), deleteUser);
 router.get("/", authorize(Role.Admin), getAll); // admin only
 router.get("/:id", authorize(), getById); // all authenticated users
+
 module.exports = router;
 
-function authenticate(req, res, next) {
-  userService
-    .authenticate(req.body)
-    .then(user =>
-      user
-        ? res.json(user)
-        : res.status(400).json({
-            message: "Username or password is incorrect"
-          })
-    )
-    .catch(err => next(err));
+
+// Auth
+async function authenticate(req, res, next)  {
+
+  try {
+    let user = await userService.authenticate(req.body);
+
+    if (user) {
+      res.json(user);
+      return;
+    }
+
+    res.status(400).json({
+      message: "Username or password is incorrect"
+    });
+
+  } catch (err) {
+    next(err)
+  }
+
 }
 
 function register(req, res, next) {
@@ -40,6 +50,7 @@ function register(req, res, next) {
     .catch(err => next(err));
 }
 
+// User Management
 function deleteUser(req, res, next) {
   userService
     .removeUser(req.params.id)
@@ -49,7 +60,7 @@ function deleteUser(req, res, next) {
 
 function getAll(req, res, next) {
   userService
-    .getAll()
+    .getAll(req.query)
     .then(users => res.json(users))
     .catch(err => next(err));
 }
