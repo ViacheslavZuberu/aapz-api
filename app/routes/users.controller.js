@@ -93,6 +93,11 @@ function updateProfile(req, res, next) {
   const currentUser = req.user;
   const profile = req.body;
 
+  if (Object.keys(profile).length < 3) {
+    res.status(400).json({ message: "Not all fields are passed!" })
+    return;
+  }
+
   userService
     .updateProfile(currentUser.sub, profile)
     .then(() => res.status(200).json({ message: "OK" }))
