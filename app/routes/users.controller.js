@@ -12,6 +12,8 @@ router.post("/downgrade/:id", authorize(Role.Admin), downgradeUser);
 router.delete("/remove/:id", authorize(Role.Admin), deleteUser);
 router.get("/", authorize(Role.Admin), getAll); // admin only
 router.get("/:id", authorize(), getById); // all authenticated users
+router.put("/update_profile", authorize(), updateProfile); // all authenticated users
+
 module.exports = router;
 
 function authenticate(req, res, next) {
@@ -84,5 +86,15 @@ function downgradeUser(req, res, next) {
   userService
     .downgradeUser(id)
     .then(user => (user ? res.json(user) : res.sendStatus(404)))
+    .catch(err => next(err));
+}
+
+function updateProfile(req, res, next) {
+  const currentUser = req.user;
+  const profile = req.body;
+
+  userService
+    .updateProfile(currentUser.sub, profile)
+    .then(() => res.status(200).json({ message: "OK" }))
     .catch(err => next(err));
 }

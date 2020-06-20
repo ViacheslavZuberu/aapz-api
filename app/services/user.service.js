@@ -12,7 +12,8 @@ module.exports = {
   register,
   removeUser,
   upgradeUser,
-  downgradeUser
+  downgradeUser,
+  updateProfile
 };
 
 async function authenticate({ username, password }) {
@@ -137,4 +138,14 @@ async function downgradeUser(id) {
   }).select("-__v -password");
 
   return user;
+}
+
+async function updateProfile(userId, updatedProfile) {
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      username: updatedProfile.username,
+      firstname: updatedProfile.firstname,
+      lastname: updatedProfile.lastname
+    }
+  }) 
 }
